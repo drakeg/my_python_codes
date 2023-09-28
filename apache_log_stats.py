@@ -53,13 +53,14 @@ def generate_domain_report(domain, log_files, output_dir):
                 date_obj = parse_date(line, access_date_formats)
 
                 if date_obj:
+                    # Update daily_access_counts using the date part only
                     domain_stats['daily_access_counts'][date_obj.date()] += 1
 
                 if "error" in log_file:
                     error_date_obj = parse_date(line, [error_date_format])
                     if error_date_obj:
                         error_message = line.split('] ')[-1].strip()
-                        domain_stats['error_counts'][(error_date_obj, error_message)] += 1
+                        domain_stats['error_counts'][error_message] += 1  # Update error_counts with the error message
 
                 page_match = re.search(r'"GET (.*?) HTTP', line)
                 if page_match:
@@ -73,7 +74,7 @@ def generate_domain_report(domain, log_files, output_dir):
     with open(output_html, 'w') as html_file:
         html_file.write(template.render(
             domain=domain,
-            daily_access=list(domain_stats['daily_access_counts'].items()),
+            daily_access=domain_stats['daily_access_counts'].items(),
             popular_pages=domain_stats['popular_pages'].most_common(10),
             top_errors=domain_stats['error_counts'].most_common(10)
         ))
