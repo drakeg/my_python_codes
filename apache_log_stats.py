@@ -94,19 +94,12 @@ error_log_files = get_log_files(log_dir, 'error')
 # Generate the HTML report for default logs (access.log and error.log)
 default_report_html = generate_domain_report('default', access_log_files + error_log_files, output_dir)
 
-# Dictionary to store statistics for each domain
-domain_stats = {}
+# Process domain-specific log files
+domain_logs = glob.glob(os.path.join(log_dir, '*.com_access.log*'))
+domain_logs.extend(glob.glob(os.path.join(log_dir, '*.com_error.log*')))
 
-for log_file in access_log_files + error_log_files:
-    domain = os.path.basename(log_file).split('_')[0]
-
-    if domain not in domain_stats:
-        domain_stats[domain] = {
-            'daily_access_counts': Counter(),
-            'popular_pages': Counter(),
-            'error_counts': Counter()
-        }
-
-    generate_domain_report(domain, [log_file], output_dir)
+for domain_log in domain_logs:
+    domain = os.path.basename(domain_log).split('_')[0]
+    generate_domain_report(domain, [domain_log], output_dir)
 
 print(f"Statistics generated and saved in {output_dir}")
