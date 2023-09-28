@@ -99,10 +99,15 @@ domain_logs = glob.glob(os.path.join(log_dir, '*.com_access.log*'))
 domain_logs.extend(glob.glob(os.path.join(log_dir, '*.com_error.log*')))
 
 # Extract unique domain names from the log file names
-unique_domains = set(re.findall(r'www\.(.*?)_', ' '.join(domain_logs)))
+unique_domains = set()
+
+for domain_log in domain_logs:
+    domain_match = re.search(r'([a-zA-Z0-9.-]+)_', os.path.basename(domain_log))
+    if domain_match:
+        unique_domains.add(domain_match.group(1))
 
 for domain in unique_domains:
-    domain_specific_logs = [log_file for log_file in domain_logs if f'www.{domain}_' in log_file]
+    domain_specific_logs = [log_file for log_file in domain_logs if re.search(rf'{domain}_[\w.-]+', log_file)]
     generate_domain_report(domain, domain_specific_logs, output_dir)
 
 print(f"Statistics generated and saved in {output_dir}")
