@@ -36,17 +36,13 @@ def parse_date(line, date_formats):
             pass
     return None
 
-# Function to consolidate stats and generate HTML report for a domain
-def generate_domain_report(domain, output_dir):
-    domain_stats = {
+# Function to consolidate stats and generate HTML report for the default logs
+def generate_default_report(log_files, output_dir):
+    default_stats = {
         'daily_access_counts': Counter(),
         'popular_pages': Counter(),
         'error_counts': Counter()
     }
-
-    # Process all log files for the current domain
-    log_files = glob.glob(os.path.join(log_dir, f'{domain}_access*.log*')) + \
-                glob.glob(os.path.join(log_dir, f'{domain}_error*.log*'))
 
     for log_file in log_files:
         with open(log_file, 'r', encoding='utf-8') as log:
@@ -57,48 +53,72 @@ def generate_domain_report(domain, output_dir):
                 date_obj = parse_date(line, access_date_formats)
 
                 if date_obj:
-                    domain_stats['daily_access_counts'][date_obj.date()] += 1
+                    default_stats['daily_access_counts'][date_obj.date()] += 1
 
                 if "error" in log_file:
                     error_date_obj = parse_date(line, [error_date_format])
                     if error_date_obj:
                         error_message = line.split('] ')[-1].strip()
-                        domain_stats['error_counts'][(error_date_obj, error_message)] += 1
+                        default_stats['error_counts'][(error_date_obj, error_message)] += 1
 
                 page_match = re.search(r'"GET (.*?) HTTP', line)
                 if page_match:
                     page = page_match.group(1)
-                    domain_stats['popular_pages'][page] += 1
+                    default_stats['popular_pages'][page] += 1
 
-    # Create HTML/CSS report for the domain
+    # Create HTML/CSS report for the default logs
     env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))
     template = env.get_template('report_template.html')
-    output_html = os.path.join(output_dir, f'{domain}.html')
+    output_html = os.path.join(output_dir, 'default.html')
     with open(output_html, 'w') as html_file:
         html_file.write(template.render(
-            domain=domain,
-            daily_access=domain_stats['daily_access_counts'],
-            popular_pages=domain_stats['popular_pages'].most_common(10),
-            top_errors=domain_stats['error_counts'].most_common(10)
+            domain='Default Logs',
+            daily_access=default_stats['daily_access_counts'],
+            popular_pages=default_stats['popular_pages'].most_common(10),
+            top_errors=default_stats['error_counts'].most_common(10)
         ))
 
     return output_html
 
-# Process all domains and generate an index.html file
-domains = set()
-for log_file in glob.glob(os.path.join(log_dir, '*.log*')):
+# Process all log files in the log directory
+log_files = glob.glob(os.path.join(log_dir, '*.log*'))
+log_files.extend(glob.glob(os.path.join(log_dir, '*.log.*')))
+log_files.extend(glob.glob(os.path.join(log_dir, 'other_vhosts_access.log*')))
+log_files.extend(glob.glob(os.path.join(log_dir, 'other_vhosts_access.log.*')))
+
+# Filter out log files that are not default Apache logs
+default_log_files = [log_file for log_file in log_files if not re.search(r'_access|_error', log_file)]
+
+# Generate the HTML report for default logs
+generate_default_report(default_log_files, output_dir)
+
+# Dictionary to store statistics for each domain
+domain_stats = {}
+
+for log_file in log_files:
     domain = os.path.basename(log_file).split('_')[0]
-    domains.add(domain)
 
-index_html_content = '<html><body><h1>Apache Log Statistics</h1><ul>'
+    if domain not in domain_stats:
+        domain_stats[domain] = {
+            'daily_access_counts': Counter(),
+            'popular_pages': Counter(),
+            'error_counts': Counter()
+        }
 
-for domain in domains:
-    report_file = generate_domain_report(domain, output_dir)
-    index_html_content += f'<li><a href="{os.path.basename(report_file)}">{domain} Statistics</a></li>'
+    date_access_counts, page_counts, error_count = generate_domain_report([log_file], output_dir)
+    domain_stats[domain]['daily_access_counts'].update(date_access_counts)
+    domain_stats[domain]['popular_pages'].update(page_counts)
+    domain_stats[domain]['error_counts'].update(error_count)
 
-index_html_content += '</ul></body></html>'
-index_html_path = os.path.join(output_dir, 'index.html')
-with open(index_html_path, 'w') as index_file:
-    index_file.write(index_html_content)
+# Create HTML/CSS report for each domain
+for domain, stats in domain_stats.items():
+    output_html = os.path.join(output_dir, f'{domain}.html')
+    with open(output_html, 'w') as html_file:
+        html_file.write(template.render(
+            domain=domain,
+            daily_access=stats['daily_access_counts'],
+            popular_pages=stats['popular_pages'].most_common(10),
+            top_errors=stats['error_counts'].most_common(10)
+        ))
 
 print(f"Statistics generated and saved in {output_dir}")
