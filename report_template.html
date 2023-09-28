@@ -82,7 +82,33 @@
         {% endfor %}
     </table>
 
-    <!-- Other sections like Popular Pages and Top Errors can remain the same -->
+    <h2>Popular Pages</h2>
+    <table>
+        <tr>
+            <th>Page</th>
+            <th>Count</th>
+        </tr>
+        {% for page, count in popular_pages %}
+        <tr>
+            <td>{{ page }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Top Errors</h2>
+    <table>
+        <tr>
+            <th>Error Message</th>
+            <th>Count</th>
+        </tr>
+        {% for error_message, count in top_errors %}
+        <tr>
+            <td>{{ error_message }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
 </body>
 </html>
