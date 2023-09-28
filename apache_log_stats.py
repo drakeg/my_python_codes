@@ -41,6 +41,7 @@ def parse_date(line, date_formats):
 def generate_domain_report(domain, log_files, output_dir):
     domain_stats = {
         'daily_access_counts': Counter(),
+        'hourly_access_counts': defaultdict(Counter),  # New defaultdict for hourly counts by day
         'popular_pages': Counter(),
         'error_counts': Counter()
     }
@@ -69,6 +70,9 @@ def generate_domain_report(domain, log_files, output_dir):
                         
                         # Update daily_access_counts using the date part only
                         domain_stats['daily_access_counts'][date_obj.date()] += 1
+                        
+                        # Update hourly_access_counts using the day and hour parts of the date
+                        domain_stats['hourly_access_counts'][date_obj.date()][date_obj.hour] += 1
 
                         if "error" in log_file:
                             error_date_obj = parse_date(line, [error_date_format])
@@ -91,12 +95,13 @@ def generate_domain_report(domain, log_files, output_dir):
         html_file.write(template.render(
             domain=domain,
             daily_access=domain_stats['daily_access_counts'].items(),
+            hourly_access=domain_stats['hourly_access_counts'].items(),  # Include hourly counts by day
             popular_pages=domain_stats['popular_pages'].most_common(10),
             top_errors=domain_stats['error_counts'].most_common(10)
         ))
 
     return output_html
-
+    
 # Function to get log files, including rotated and gzipped files
 def get_log_files(log_dir, prefix):
     log_files = glob.glob(os.path.join(log_dir, f'{prefix}*.log*'))
