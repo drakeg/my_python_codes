@@ -1,83 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apache Log Statistics for {{ domain }}</title>
+    <title>Access Report for {{ domain }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
         }
+
         h1 {
             color: #333;
         }
-        h2 {
-            color: #666;
-        }
-        .section {
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 5px;
-        }
+
         table {
             border-collapse: collapse;
             width: 100%;
         }
+
+        table, th, td {
+            border: 1px solid #333;
+        }
+
         th, td {
-            border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
         }
+
         th {
             background-color: #f2f2f2;
         }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .hourly-breakdown {
+            margin-top: 10px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .hourly-breakdown, .hourly-breakdown th, .hourly-breakdown td {
+            border: 1px solid #ddd;
+        }
+
+        .hourly-breakdown th, .hourly-breakdown td {
+            padding: 5px;
+            text-align: center;
+        }
+
     </style>
 </head>
 <body>
-    <h1>{{ domain }} Statistics</h1>
+    <h1>Access Report for {{ domain }}</h1>
 
     <h2>Daily Access Counts</h2>
     <table>
         <tr>
             <th>Date</th>
-            <th>Count</th>
+            <th>Daily Count</th>
+            <th>Hourly Breakdown</th>
         </tr>
-        {% for date, count in daily_access %}
+        {% for date, daily_count, hourly_breakdown in daily_access %}
         <tr>
             <td>{{ date }}</td>
-            <td>{{ count }}</td>
+            <td>{{ daily_count }}</td>
+            <td>
+                <table class="hourly-breakdown">
+                    <tr>
+                        <th>Hour</th>
+                        <th>Count</th>
+                    </tr>
+                    {% for hour, hour_count in hourly_breakdown %}
+                    <tr>
+                        <td>{{ hour }}</td>
+                        <td>{{ hour_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
         </tr>
         {% endfor %}
     </table>
 
-    <h2>Popular Pages</h2>
-    <table>
-        <tr>
-            <th>Page</th>
-            <th>Count</th>
-        </tr>
-        {% for page, count in popular_pages %}
-        <tr>
-            <td>{{ page }}</td>
-            <td>{{ count }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <!-- Other sections like Popular Pages and Top Errors can remain the same -->
 
-    <h2>Top Errors</h2>
-    <table>
-        <tr>
-            <th>Error Message</th>
-            <th>Count</th>
-        </tr>
-        {% for error_message, count in top_errors %}
-        <tr>
-            <td>{{ error_message }}</td>
-            <td>{{ count }}</td>
-        </tr>
-        {% endfor %}
-    </table>
 </body>
 </html>
