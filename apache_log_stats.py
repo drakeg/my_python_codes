@@ -149,4 +149,4 @@ for domain in unique_domains:
     domain_specific_logs = [log_file for log_file in domain_logs if re.search(rf'{domain}_[\w.-]+', log_file)]
     generate_domain_report(domain, domain_specific_logs, output_dir)
 
-print(f"Statistics generated and saved in {output_dir}".  Download to another location to view the HTML reports.)
+print(f"Statistics generated and saved in {output_dir}.  Download to another location to view the HTML reports.")
