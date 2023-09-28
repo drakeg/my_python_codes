@@ -80,22 +80,24 @@ def generate_domain_report(domain, log_files, output_dir):
 
     return output_html
 
+# Function to get log files, including rotated and gzipped files
+def get_log_files(log_dir, prefix):
+    log_files = glob.glob(os.path.join(log_dir, f'{prefix}*.log*'))
+    log_files.extend(glob.glob(os.path.join(log_dir, f'{prefix}*.log.*')))
+    log_files.extend(glob.glob(os.path.join(log_dir, f'{prefix}*.gz')))
+    return log_files
+
 # Process all log files in the log directory
-log_files = glob.glob(os.path.join(log_dir, '*.log*'))
-log_files.extend(glob.glob(os.path.join(log_dir, '*.log.*')))
-log_files.extend(glob.glob(os.path.join(log_dir, 'other_vhosts_access.log*')))
-log_files.extend(glob.glob(os.path.join(log_dir, 'other_vhosts_access.log.*')))
+access_log_files = get_log_files(log_dir, 'access')
+error_log_files = get_log_files(log_dir, 'error')
 
-# Filter out log files that are not default Apache logs
-default_log_files = [log_file for log_file in log_files if not re.search(r'_access|_error', log_file)]
-
-# Generate the HTML report for default logs
-generate_domain_report('default', default_log_files, output_dir)
+# Generate the HTML report for default logs (access.log and error.log)
+default_report_html = generate_domain_report('default', access_log_files + error_log_files, output_dir)
 
 # Dictionary to store statistics for each domain
 domain_stats = {}
 
-for log_file in log_files:
+for log_file in access_log_files + error_log_files:
     domain = os.path.basename(log_file).split('_')[0]
 
     if domain not in domain_stats:
