@@ -5,6 +5,7 @@ import datetime
 from collections import Counter, defaultdict
 from jinja2 import Environment, FileSystemLoader
 import gzip
+import chardet
 
 # Define the log directory and output directory
 log_dir = "/var/log/apache2/"
