@@ -36,54 +36,48 @@
     </style>
 </head>
 <body>
-    <h1>Apache Log Statistics for {{ domain }}</h1>
+    <h1>{{ domain }} Statistics</h1>
 
-    <div class="section">
-        <h2>Daily Access Counts</h2>
-        <table>
-            <tr>
-                <th>Date</th>
-                <th>Count</th>
-            </tr>
-            {% for date, count in daily_access.items() %}
-                <tr>
-                    <td>{{ date }}</td>
-                    <td>{{ count }}</td>
-                </tr>
-            {% endfor %}
-        </table>
-    </div>
+    <h2>Daily Access Counts</h2>
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>Count</th>
+        </tr>
+        {% for date, count in daily_access %}
+        <tr>
+            <td>{{ date }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
-    <div class="section">
-        <h2>Popular Pages</h2>
-        <table>
-            <tr>
-                <th>Page</th>
-                <th>Count</th>
-            </tr>
-            {% for page, count in popular_pages %}
-                <tr>
-                    <td>{{ page }}</td>
-                    <td>{{ count }}</td>
-                </tr>
-            {% endfor %}
-        </table>
-    </div>
+    <h2>Popular Pages</h2>
+    <table>
+        <tr>
+            <th>Page</th>
+            <th>Count</th>
+        </tr>
+        {% for page, count in popular_pages %}
+        <tr>
+            <td>{{ page }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
-    <div class="section">
-        <h2>Top Errors</h2>
-        <table>
-            <tr>
-                <th>Error Message</th>
-                <th>Count</th>
-            </tr>
-            {% for error, count in top_errors %}
-                <tr>
-                    <td>{{ error }}</td>
-                    <td>{{ count }}</td>
-                </tr>
-            {% endfor %}
-        </table>
-    </div>
+    <h2>Top Errors</h2>
+    <table>
+        <tr>
+            <th>Error Message</th>
+            <th>Count</th>
+        </tr>
+        {% for error_message, count in top_errors %}
+        <tr>
+            <td>{{ error_message }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 </body>
 </html>
