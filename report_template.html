@@ -83,7 +83,7 @@
                     <th>Date</th>
                     <th>Total Count</th>
                 </tr>
-                {% for date, daily_count, hourly_breakdown in daily_access %}
+                {% for date, (daily_count, hourly_breakdown) in daily_access %}
                 <tr>
                     <td>{{ date.strftime('%Y-%m-%d') }}</td>
                     <td>{{ daily_count }}</td>
