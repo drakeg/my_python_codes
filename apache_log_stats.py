@@ -5,7 +5,6 @@ import datetime
 from collections import Counter
 from jinja2 import Environment, FileSystemLoader
 import gzip
-import chardet
 
 # Define the log directory and output directory
 log_dir = "/var/log/apache2/"
@@ -14,14 +13,16 @@ output_dir = "/tmp/stats/"
 # Ensure the output directory exists
 os.makedirs(output_dir, exist_ok=True)
 
-# Define a list of possible date formats to try for access logs
-access_date_formats = [
-    '%d/%b/%Y:%H:%M:%S %z',
-    # Add more formats as needed
-]
-
-# Define the date format for error logs
-error_date_format = '%a %b %d %H:%M:%S.%f %Y'
+# Function to detect the file encoding
+def detect_encoding(file_path):
+    try:
+        with open(file_path, 'rb') as file:
+            data = file.read(1024)
+        encoding = chardet.detect(data)['encoding']
+        return encoding
+    except Exception as e:
+        print(f"Error detecting encoding: {str(e)}")
+        return 'utf-8'
 
 # Function to parse the date from a log line
 def parse_date(line, date_formats):
@@ -35,18 +36,6 @@ def parse_date(line, date_formats):
         except ValueError:
             pass
     return None
-
-# Function to detect the encoding of a file
-def detect_encoding(file_path):
-    with open(file_path, 'rb') as file:
-        detector = chardet.universaldetector.UniversalDetector()
-        for line in file:
-            detector.feed(line)
-            if detector.done:
-                break
-        detector.close()
-        encoding = detector.result['encoding']
-    return encoding
 
 # Function to consolidate stats and generate HTML report for a domain
 def generate_domain_report(domain, log_files, output_dir):
@@ -107,12 +96,23 @@ def generate_domain_report(domain, log_files, output_dir):
         ))
 
     return output_html
+
 # Function to get log files, including rotated and gzipped files
 def get_log_files(log_dir, prefix):
     log_files = glob.glob(os.path.join(log_dir, f'{prefix}*.log*'))
     log_files.extend(glob.glob(os.path.join(log_dir, f'{prefix}*.log.*')))
     log_files.extend(glob.glob(os.path.join(log_dir, f'{prefix}*.gz')))
     return log_files
+
+# Define a list of possible date formats to try for access logs
+access_date_formats = [
+    '%d/%b/%Y:%H:%M:%S %z',
+    '%a %b %d %H:%M:%S %Y',
+    # Add more formats as needed
+]
+
+# Define the date format for error logs
+error_date_format = '%a %b %d %H:%M:%S.%f %Y'
 
 # Process all log files in the log directory
 access_log_files = get_log_files(log_dir, 'access')
@@ -129,4 +129,12 @@ domain_logs.extend(glob.glob(os.path.join(log_dir, '*_error.log*')))
 unique_domains = set()
 
 for domain_log in domain_logs:
-    domain_match = re.search(r'
+    domain_match = re.search(r'([a-zA-Z0-9.-]+)_', os.path.basename(domain_log))
+    if domain_match:
+        unique_domains.add(domain_match.group(1))
+
+for domain in unique_domains:
+    domain_specific_logs = [log_file for log_file in domain_logs if re.search(rf'{domain}_[\w.-]+', log_file)]
+    generate_domain_report(domain, domain_specific_logs, output_dir)
+
+print(f"Statistics generated and saved in {output_dir}")
