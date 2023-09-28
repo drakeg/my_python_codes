@@ -2,7 +2,7 @@ import os
 import glob
 import re
 import datetime
-from collections import Counter
+from collections import Counter, defaultdict
 from jinja2 import Environment, FileSystemLoader
 import gzip
 
