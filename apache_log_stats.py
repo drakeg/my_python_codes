@@ -95,8 +95,8 @@ error_log_files = get_log_files(log_dir, 'error')
 default_report_html = generate_domain_report('default', access_log_files + error_log_files, output_dir)
 
 # Process domain-specific log files
-domain_logs = glob.glob(os.path.join(log_dir, '*.com_access.log*'))
-domain_logs.extend(glob.glob(os.path.join(log_dir, '*.com_error.log*')))
+domain_logs = glob.glob(os.path.join(log_dir, '*_access.log*'))
+domain_logs.extend(glob.glob(os.path.join(log_dir, '*_error.log*')))
 
 # Extract unique domain names from the log file names
 unique_domains = set()
