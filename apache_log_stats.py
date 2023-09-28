@@ -5,6 +5,7 @@ import datetime
 from collections import Counter
 from jinja2 import Environment, FileSystemLoader
 import gzip
+import chardet
 
 # Define the log directory and output directory
 log_dir = "/var/log/apache2/"
@@ -15,8 +16,7 @@ os.makedirs(output_dir, exist_ok=True)
 
 # Define a list of possible date formats to try for access logs
 access_date_formats = [
-    '%d/%b/%Y:%H:%M:%S',
-    '%a %b %d %H:%M:%S %Y',
+    '%d/%b/%Y:%H:%M:%S %z',
     # Add more formats as needed
 ]
 
@@ -36,6 +36,18 @@ def parse_date(line, date_formats):
             pass
     return None
 
+# Function to detect the encoding of a file
+def detect_encoding(file_path):
+    with open(file_path, 'rb') as file:
+        detector = chardet.universaldetector.UniversalDetector()
+        for line in file:
+            detector.feed(line)
+            if detector.done:
+                break
+        detector.close()
+        encoding = detector.result['encoding']
+    return encoding
+
 # Function to consolidate stats and generate HTML report for a domain
 def generate_domain_report(domain, log_files, output_dir):
     domain_stats = {
@@ -45,7 +57,8 @@ def generate_domain_report(domain, log_files, output_dir):
     }
 
     for log_file in log_files:
-        with open(log_file, 'r', encoding='utf-8') as log:
+        encoding = detect_encoding(log_file)
+        with open(log_file, 'r', encoding=encoding) as log:
             if log_file.endswith('.gz'):
                 log = gzip.open(log_file, 'rt')
 
@@ -53,14 +66,13 @@ def generate_domain_report(domain, log_files, output_dir):
                 date_obj = parse_date(line, access_date_formats)
 
                 if date_obj:
-                    # Update daily_access_counts using the date part only
                     domain_stats['daily_access_counts'][date_obj.date()] += 1
 
                 if "error" in log_file:
                     error_date_obj = parse_date(line, [error_date_format])
                     if error_date_obj:
                         error_message = line.split('] ')[-1].strip()
-                        domain_stats['error_counts'][error_message] += 1  # Update error_counts with the error message
+                        domain_stats['error_counts'][error_message] += 1
 
                 page_match = re.search(r'"GET (.*?) HTTP', line)
                 if page_match:
@@ -103,12 +115,4 @@ domain_logs.extend(glob.glob(os.path.join(log_dir, '*_error.log*')))
 unique_domains = set()
 
 for domain_log in domain_logs:
-    domain_match = re.search(r'([a-zA-Z0-9.-]+)_', os.path.basename(domain_log))
-    if domain_match:
-        unique_domains.add(domain_match.group(1))
-
-for domain in unique_domains:
-    domain_specific_logs = [log_file for log_file in domain_logs if re.search(rf'{domain}_[\w.-]+', log_file)]
-    generate_domain_report(domain, domain_specific_logs, output_dir)
-
-print(f"Statistics generated and saved in {output_dir}")
+    domain_match = re.search(r'
