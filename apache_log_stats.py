@@ -56,6 +56,9 @@ def generate_domain_report(domain, log_files, output_dir):
         'error_counts': Counter()
     }
 
+    # Define a regular expression pattern to match the date within square brackets
+    date_pattern = r'\[([^]]+)\]'
+
     for log_file in log_files:
         encoding = detect_encoding(log_file)
         with open(log_file, 'r', encoding=encoding) as log:
@@ -63,21 +66,33 @@ def generate_domain_report(domain, log_files, output_dir):
                 log = gzip.open(log_file, 'rt')
 
             for line in log:
-                date_obj = parse_date(line, access_date_formats)
+                # Find the date substring within square brackets
+                date_match = re.search(date_pattern, line)
+                if date_match:
+                    date_str = date_match.group(1)
+                    
+                    # Define the date format
+                    date_format = '%d/%b/%Y:%H:%M:%S %z'
+                    
+                    try:
+                        # Parse the date string
+                        date_obj = datetime.datetime.strptime(date_str, date_format)
+                        
+                        # Update daily_access_counts using the date part only
+                        domain_stats['daily_access_counts'][date_obj.date()] += 1
 
-                if date_obj:
-                    domain_stats['daily_access_counts'][date_obj.date()] += 1
+                        if "error" in log_file:
+                            error_date_obj = parse_date(line, [error_date_format])
+                            if error_date_obj:
+                                error_message = line.split('] ')[-1].strip()
+                                domain_stats['error_counts'][(error_date_obj, error_message)] += 1
 
-                if "error" in log_file:
-                    error_date_obj = parse_date(line, [error_date_format])
-                    if error_date_obj:
-                        error_message = line.split('] ')[-1].strip()
-                        domain_stats['error_counts'][error_message] += 1
-
-                page_match = re.search(r'"GET (.*?) HTTP', line)
-                if page_match:
-                    page = page_match.group(1)
-                    domain_stats['popular_pages'][page] += 1
+                        page_match = re.search(r'"GET (.*?) HTTP', line)
+                        if page_match:
+                            page = page_match.group(1)
+                            domain_stats['popular_pages'][page] += 1
+                    except ValueError:
+                        pass
 
     # Create HTML/CSS report for the domain
     env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))
@@ -92,7 +107,6 @@ def generate_domain_report(domain, log_files, output_dir):
         ))
 
     return output_html
-
 # Function to get log files, including rotated and gzipped files
 def get_log_files(log_dir, prefix):
     log_files = glob.glob(os.path.join(log_dir, f'{prefix}*.log*'))
