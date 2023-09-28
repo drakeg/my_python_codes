@@ -5,6 +5,7 @@ import datetime
 from collections import Counter
 import matplotlib.pyplot as plt
 from jinja2 import Environment, FileSystemLoader
+import gzip
 
 # Define the log directory and output directory
 log_dir = "/var/log/apache2/"
@@ -22,7 +23,7 @@ def parse_apache_logs(log_file):
     date_format = re.compile(r'\[(.*?)\]')
     page_pattern = re.compile(r'"GET (.*?) HTTP')
 
-    with open(log_file, 'r') as log:
+    with gzip.open(log_file, 'rt') as log:
         for line in log:
             date_match = date_format.search(line)
             page_match = page_pattern.search(line)
