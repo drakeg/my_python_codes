@@ -14,25 +14,42 @@ output_dir = "/tmp/stats/"
 # Ensure the output directory exists
 os.makedirs(output_dir, exist_ok=True)
 
+# Define a list of possible date formats to try
+date_formats = [
+    '%d/%b/%Y:%H:%M:%S',
+    '%a %b %d %H:%M:%S %Y',
+    # Add more formats as needed
+]
+
+# Function to parse the date from a log line
+def parse_date(line):
+    for format_str in date_formats:
+        try:
+            date_match = re.search(r'\[({})\]'.format(format_str), line)
+            if date_match:
+                date_str = date_match.group(1)
+                date_obj = datetime.datetime.strptime(date_str, format_str)
+                return date_obj
+        except ValueError:
+            pass
+    return None
+
 # Define a function to parse Apache log files
 def parse_apache_logs(log_file):
     date_access_counts = Counter()
     popular_pages = Counter()
     error_counts = Counter()
 
-    date_format = re.compile(r'\[(.*?)\]')
     page_pattern = re.compile(r'"GET (.*?) HTTP')
 
     with gzip.open(log_file, 'rt') as log:
         for line in log:
-            date_match = date_format.search(line)
-            page_match = page_pattern.search(line)
+            date_obj = parse_date(line)
 
-            if date_match:
-                date_str = date_match.group(1).split()[0]
-                date_obj = datetime.datetime.strptime(date_str, '%d/%b/%Y:%H:%M:%S')
+            if date_obj:
                 date_access_counts[date_obj.date()] += 1
 
+            page_match = page_pattern.search(line)
             if page_match:
                 page = page_match.group(1)
                 popular_pages[page] += 1
