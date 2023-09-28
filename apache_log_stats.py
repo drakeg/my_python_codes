@@ -93,16 +93,9 @@ def generate_domain_report(domain, log_files, output_dir):
     template = env.get_template('report_template.html')
     output_html = os.path.join(output_dir, f'{domain}.html')
     with open(output_html, 'w') as html_file:
-        # Modify the daily_access data structure here
-        daily_access = [
-            (date, daily_count, hourly_breakdown) 
-            for date, daily_count, hourly_breakdown in domain_stats['daily_access_counts'].items()
-        ]
-
         html_file.write(template.render(
             domain=domain,
-            daily_access=daily_access,  # Pass the modified daily_access here
-            hourly_access=domain_stats['hourly_access_counts'].items(),  # Include hourly counts by day
+            daily_access={date: (daily_count, hourly_breakdown) for date, (daily_count, hourly_breakdown) in domain_stats['daily_access_counts'].items()},
             popular_pages=domain_stats['popular_pages'].most_common(10),
             top_errors=domain_stats['error_counts'].most_common(10)
         ))
@@ -149,4 +142,4 @@ for domain in unique_domains:
     domain_specific_logs = [log_file for log_file in domain_logs if re.search(rf'{domain}_[\w.-]+', log_file)]
     generate_domain_report(domain, domain_specific_logs, output_dir)
 
-print(f"Statistics generated and saved in {output_dir}.  Download to another location to view the HTML reports.")
+print(f"Statistics generated and saved in {output_dir}")
