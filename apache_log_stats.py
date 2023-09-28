@@ -73,7 +73,7 @@ def generate_domain_report(domain, log_files, output_dir):
     with open(output_html, 'w') as html_file:
         html_file.write(template.render(
             domain=domain,
-            daily_access=domain_stats['daily_access_counts'].items(),
+            daily_access=list(domain_stats['daily_access_counts'].items()),
             popular_pages=domain_stats['popular_pages'].most_common(10),
             top_errors=domain_stats['error_counts'].most_common(10)
         ))
