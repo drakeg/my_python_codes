@@ -45,7 +45,7 @@ def parse_apache_logs(log_file):
 
     page_pattern = re.compile(r'"GET (.*?) HTTP')
 
-    with open(log_file, 'rb') as log:
+    with open(log_file, 'r' encoding='utf-8') as log:
         if log_file.endswith('.gz'):
             log = gzip.open(log_file, 'rt')
 
