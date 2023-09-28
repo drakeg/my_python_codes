@@ -3,7 +3,6 @@ import glob
 import re
 import datetime
 from collections import Counter
-import matplotlib.pyplot as plt
 from jinja2 import Environment, FileSystemLoader
 import gzip
 
@@ -74,7 +73,7 @@ def generate_domain_report(domain, output_dir):
     # Create HTML/CSS report for the domain
     env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))
     template = env.get_template('report_template.html')
-    output_html = os.path.join(output_dir, f'{domain}_stats.html')
+    output_html = os.path.join(output_dir, f'{domain}.html')
     with open(output_html, 'w') as html_file:
         html_file.write(template.render(
             domain=domain,
