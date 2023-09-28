@@ -14,15 +14,18 @@ output_dir = "/tmp/stats/"
 # Ensure the output directory exists
 os.makedirs(output_dir, exist_ok=True)
 
-# Define a list of possible date formats to try
-date_formats = [
+# Define a list of possible date formats to try for access logs
+access_date_formats = [
     '%d/%b/%Y:%H:%M:%S',
     '%a %b %d %H:%M:%S %Y',
     # Add more formats as needed
 ]
 
+# Define the date format for error logs
+error_date_format = '%a %b %d %H:%M:%S.%f %Y'
+
 # Function to parse the date from a log line
-def parse_date(line):
+def parse_date(line, date_formats):
     for format_str in date_formats:
         try:
             date_match = re.search(r'\[({})\]'.format(format_str), line)
@@ -42,9 +45,12 @@ def parse_apache_logs(log_file):
 
     page_pattern = re.compile(r'"GET (.*?) HTTP')
 
-    with gzip.open(log_file, 'rt') as log:
+    with open(log_file, 'rb') as log:
+        if log_file.endswith('.gz'):
+            log = gzip.open(log_file, 'rt')
+
         for line in log:
-            date_obj = parse_date(line)
+            date_obj = parse_date(line, access_date_formats)
 
             if date_obj:
                 date_access_counts[date_obj.date()] += 1
@@ -55,8 +61,10 @@ def parse_apache_logs(log_file):
                 popular_pages[page] += 1
 
             if "error" in log_file:
-                error_message = line.split('] ')[-1].strip()
-                error_counts[error_message] += 1
+                error_date_obj = parse_date(line, [error_date_format])
+                if error_date_obj:
+                    error_message = line.split('] ')[-1].strip()
+                    error_counts[(error_date_obj, error_message)] += 1
 
     return date_access_counts, popular_pages, error_counts
 
