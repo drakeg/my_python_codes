@@ -1,114 +1,158 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Access Report for {{ domain }}</title>
+    <meta charset="utf-8">
+    <title>{{ domain }} Statistics</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        header {
+            background: #35424a;
+            color: #fff;
+            padding: 20px;
+            margin-bottom: 10px;
+            border-radius: 10px;
         }
 
         h1 {
-            color: #333;
+            margin: 0;
         }
 
-        table {
-            border-collapse: collapse;
+        h3 {
+            color: #35424a;
+        }
+
+        .table {
             width: 100%;
+            border-collapse: collapse;
+            background: white;
         }
 
-        table, th, td {
-            border: 1px solid #333;
-        }
-
-        th, td {
-            padding: 8px;
+        .table th, .table td {
             text-align: left;
+            padding: 8px;
         }
 
-        th {
+        .table th {
+            background: #35424a;
+            color: white;
+        }
+
+        .table tr:nth-child(even) {
             background-color: #f2f2f2;
         }
 
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
+        .table tr:hover {
+            background-color: #ddd;
         }
-
-        .hourly-breakdown {
-            margin-top: 10px;
-            border-collapse: collapse;
+        
+        .chart-container {
             width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
         }
 
-        .hourly-breakdown, .hourly-breakdown th, .hourly-breakdown td {
-            border: 1px solid #ddd;
+        .chart {
+            width: 100%;
+            height: auto;
         }
-
-        .hourly-breakdown th, .hourly-breakdown td {
-            padding: 5px;
-            text-align: center;
-        }
-
     </style>
 </head>
 <body>
-    <h1>Access Report for {{ domain }}</h1>
+    <div class="container">
+        <header>
+            <h1>{{ domain }} Statistics</h1>
+        </header>
+        
+        <section>
+            <h3>Daily Access Counts</h3>
+            <table class="table">
+                <tr>
+                    <th>Date</th>
+                    <th>Total Count</th>
+                </tr>
+                {% for date, daily_count, hourly_breakdown in daily_access %}
+                <tr>
+                    <td>{{ date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ daily_count }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div class="chart-container">
+                            <canvas class="chart" id="hourlyChart{{ loop.index }}"></canvas>
+                        </div>
+                    </td>
+                </tr>
+                <script>
+                    var ctx{{ loop.index }} = document.getElementById('hourlyChart{{ loop.index }}').getContext('2d');
+                    var hourlyChart{{ loop.index }} = new Chart(ctx{{ loop.index }}, {
+                        type: 'bar',
+                        data: {
+                            labels: [{% for hour, count in hourly_breakdown.items() %}"{{ hour }}"{% if not loop.last %}, {% endif %}{% endfor %}],
+                            datasets: [{
+                                label: 'Hourly Access Counts',
+                                data: [{% for hour, count in hourly_breakdown.items() %}{{ count }}{% if not loop.last %}, {% endif %}{% endfor %}],
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                </script>
+                {% endfor %}
+            </table>
+        </section>
 
-    <h2>Daily Access Counts</h2>
-    <table>
-        <tr>
-            <th>Date</th>
-            <th>Daily Count</th>
-            <th>Hourly Breakdown</th>
-        </tr>
-        {% for date, daily_count, hourly_breakdown in daily_access %}
-        <tr>
-            <td>{{ date }}</td>
-            <td>{{ daily_count }}</td>
-            <td>
-                <table class="hourly-breakdown">
-                    <tr>
-                        <th>Hour</th>
-                        <th>Count</th>
-                    </tr>
-                    {% for hour, hour_count in hourly_breakdown %}
-                    <tr>
-                        <td>{{ hour }}</td>
-                        <td>{{ hour_count }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+        <section>
+            <h3>Popular Pages</h3>
+            <table class="table">
+                <tr>
+                    <th>Page</th>
+                    <th>Count</th>
+                </tr>
+                {% for page, count in popular_pages %}
+                <tr>
+                    <td>{{ page }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </section>
 
-    <h2>Popular Pages</h2>
-    <table>
-        <tr>
-            <th>Page</th>
-            <th>Count</th>
-        </tr>
-        {% for page, count in popular_pages %}
-        <tr>
-            <td>{{ page }}</td>
-            <td>{{ count }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <h2>Top Errors</h2>
-    <table>
-        <tr>
-            <th>Error Message</th>
-            <th>Count</th>
-        </tr>
-        {% for error_message, count in top_errors %}
-        <tr>
-            <td>{{ error_message }}</td>
-            <td>{{ count }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-
+        <section>
+            <h3>Top Errors</h3>
+            <table class="table">
+                <tr>
+                    <th>Error Message</th>
+                    <th>Count</th>
+                </tr>
+                {% for error_message, count in top_errors %}
+                <tr>
+                    <td>{{ error_message }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </section>
+    </div>
 </body>
 </html>
