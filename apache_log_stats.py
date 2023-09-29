@@ -95,13 +95,14 @@ def generate_domain_report(domain, log_files, output_dir):
     with open(output_html, 'w') as html_file:
         html_file.write(template.render(
             domain=domain,
-            daily_access={date: (daily_count, hourly_breakdown) for date, (daily_count, hourly_breakdown) in domain_stats['daily_access_counts'].items()},
+            daily_access=domain_stats['daily_access_counts'].items(),
+            hourly_access=domain_stats['hourly_access_counts'].items(),  # Include hourly counts by day
             popular_pages=domain_stats['popular_pages'].most_common(10),
             top_errors=domain_stats['error_counts'].most_common(10)
         ))
 
     return output_html
-    
+
 # Function to get log files, including rotated and gzipped files
 def get_log_files(log_dir, prefix):
     log_files = glob.glob(os.path.join(log_dir, f'{prefix}*.log*'))
