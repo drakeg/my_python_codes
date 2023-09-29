@@ -59,30 +59,15 @@
                 </tr>
             </thead>
             <tbody>
-                {% for date, daily_count in daily_access %}
+                {% for date, daily_count, hourly_breakdown in daily_access %}
                     <tr>
                         <td>{{ date.strftime("%Y-%m-%d") }}</td>
                         <td>{{ daily_count }}</td>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <h2>Hourly Access Counts</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Hour</th>
-                    <th>Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for date, hourly_breakdown in hourly_access %}
                     {% for hour, count in hourly_breakdown.items() %}
                         <tr>
-                            <td>{{ date.strftime("%Y-%m-%d") }}</td>
-                            <td>{{ hour }}</td>
+                            <td></td>
+                            <td>{{ hour|time_range }}</td>
                             <td>{{ count }}</td>
                         </tr>
                     {% endfor %}
