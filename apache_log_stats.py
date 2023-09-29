@@ -38,6 +38,61 @@ def parse_date(line, date_formats):
             pass
     return None
 
+# Define the custom Jinja2 filter
+def time_range(value):
+    hour = int(value)
+    if 0 <= hour < 1:
+        return '00:01 - 01:00'
+    elif 1 <= hour < 2:
+        return '01:01 - 02:00'
+    elif 2 <= hour < 3:
+        return '02:01 - 03:00'
+    elif 3 <= hour < 4:
+        return '03:01 - 04:00'
+    elif 4 <= hour < 5:
+        return '04:01 - 05:00'
+    elif 5 <= hour < 6:
+        return '05:01 - 06:00'
+    elif 6 <= hour < 7:
+        return '06:01 - 07:00'
+    elif 7 <= hour < 8:
+        return '07:01 - 08:00'
+    elif 8 <= hour < 9:
+        return '08:01 - 09:00'
+    elif 9 <= hour < 10:
+        return '09:01 - 10:00'
+    elif 10 <= hour < 11:
+        return '10:01 - 11:00'
+    elif 11 <= hour < 12:
+        return '11:01 - 12:00'
+    elif 12 <= hour < 13:
+        return '12:01 - 13:00'
+    elif 13 <= hour < 14:
+        return '13:01 - 14:00'
+    elif 14 <= hour < 15:
+        return '14:01 - 15:00'
+    elif 15 <= hour < 16:
+        return '15:01 - 16:00'
+    elif 16 <= hour < 17:
+        return '16:01 - 17:00'
+    elif 17 <= hour < 18:
+        return '17:01 - 18:00'
+    elif 18 <= hour < 19:
+        return '18:01 - 19:00'
+    elif 19 <= hour < 20:
+        return '19:01 - 20:00'
+    elif 20 <= hour < 21:
+        return '20:01 - 21:00'
+    elif 21 <= hour < 22:
+        return '21:01 - 22:00'
+    elif 22 <= hour < 23:
+        return '22:01 - 23:00'
+    elif 23 <= hour < 24:
+        return '23:01 - 24:00'
+    # Add more conditions for other hours as needed
+    else:
+        return 'Unknown'
+
 # Function to consolidate stats and generate HTML report for a domain
 def generate_domain_report(domain, log_files, output_dir):
     domain_stats = {
@@ -90,6 +145,7 @@ def generate_domain_report(domain, log_files, output_dir):
 
     # Create HTML/CSS report for the domain
     env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))
+    env.filters['time_range'] = time_range
     template = env.get_template('report_template.jinja')
     output_html = os.path.join(output_dir, f'{domain}.html')
     with open(output_html, 'w') as html_file:
