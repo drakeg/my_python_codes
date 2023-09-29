@@ -1,158 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>{{ domain }} Statistics</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ domain }} Stats</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            width: 80%;
-            margin: auto;
-            overflow: hidden;
-            padding: 20px;
-        }
-
-        header {
-            background: #35424a;
-            color: #fff;
-            padding: 20px;
-            margin-bottom: 10px;
-            border-radius: 10px;
         }
 
         h1 {
-            margin: 0;
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
         }
 
-        h3 {
-            color: #35424a;
+        h2 {
+            margin-top: 30px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
         }
 
-        .table {
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
         }
 
-        .table th, .table td {
-            text-align: left;
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
             padding: 8px;
+            text-align: left;
         }
 
-        .table th {
-            background: #35424a;
-            color: white;
-        }
-
-        .table tr:nth-child(even) {
+        th {
             background-color: #f2f2f2;
-        }
-
-        .table tr:hover {
-            background-color: #ddd;
-        }
-        
-        .chart-container {
-            width: 100%;
-            max-width: 800px;
-            margin: 20px auto;
-        }
-
-        .chart {
-            width: 100%;
-            height: auto;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>{{ domain }} Statistics</h1>
-        </header>
-        
-        <section>
-            <h3>Daily Access Counts</h3>
-            <table class="table">
+        <h1>{{ domain }} Statistics</h1>
+
+        <h2>Daily Access Counts</h2>
+        <table>
+            <thead>
                 <tr>
                     <th>Date</th>
                     <th>Total Count</th>
                 </tr>
-                {% for date, (daily_count, hourly_breakdown) in daily_access %}
-                <tr>
-                    <td>{{ date.strftime('%Y-%m-%d') }}</td>
-                    <td>{{ daily_count }}</td>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <div class="chart-container">
-                            <canvas class="chart" id="hourlyChart{{ loop.index }}"></canvas>
-                        </div>
-                    </td>
-                </tr>
-                <script>
-                    var ctx{{ loop.index }} = document.getElementById('hourlyChart{{ loop.index }}').getContext('2d');
-                    var hourlyChart{{ loop.index }} = new Chart(ctx{{ loop.index }}, {
-                        type: 'bar',
-                        data: {
-                            labels: [{% for hour, count in hourly_breakdown.items() %}"{{ hour }}"{% if not loop.last %}, {% endif %}{% endfor %}],
-                            datasets: [{
-                                label: 'Hourly Access Counts',
-                                data: [{% for hour, count in hourly_breakdown.items() %}{{ count }}{% if not loop.last %}, {% endif %}{% endfor %}],
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            scales: {
-                                y: {
-                                    beginAtZero: true
-                                }
-                            }
-                        }
-                    });
-                </script>
+            </thead>
+            <tbody>
+                {% for date, daily_count in daily_access %}
+                    <tr>
+                        <td>{{ date.strftime("%Y-%m-%d") }}</td>
+                        <td>{{ daily_count }}</td>
+                    </tr>
                 {% endfor %}
-            </table>
-        </section>
+            </tbody>
+        </table>
 
-        <section>
-            <h3>Popular Pages</h3>
-            <table class="table">
+        <h2>Hourly Access Counts</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Hour</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for date, hourly_breakdown in hourly_access %}
+                    {% for hour, count in hourly_breakdown.items() %}
+                        <tr>
+                            <td>{{ date.strftime("%Y-%m-%d") }}</td>
+                            <td>{{ hour }}</td>
+                            <td>{{ count }}</td>
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Popular Pages</h2>
+        <table>
+            <thead>
                 <tr>
                     <th>Page</th>
                     <th>Count</th>
                 </tr>
+            </thead>
+            <tbody>
                 {% for page, count in popular_pages %}
-                <tr>
-                    <td>{{ page }}</td>
-                    <td>{{ count }}</td>
-                </tr>
+                    <tr>
+                        <td>{{ page }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
                 {% endfor %}
-            </table>
-        </section>
+            </tbody>
+        </table>
 
-        <section>
-            <h3>Top Errors</h3>
-            <table class="table">
+        <h2>Top Errors</h2>
+        <table>
+            <thead>
                 <tr>
                     <th>Error Message</th>
                     <th>Count</th>
                 </tr>
+            </thead>
+            <tbody>
                 {% for error_message, count in top_errors %}
-                <tr>
-                    <td>{{ error_message }}</td>
-                    <td>{{ count }}</td>
-                </tr>
+                    <tr>
+                        <td>{{ error_message }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
                 {% endfor %}
-            </table>
-        </section>
+            </tbody>
+        </table>
     </div>
 </body>
 </html>
