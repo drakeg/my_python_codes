@@ -2,13 +2,22 @@ import boto3
 import csv
 
 def search_services(client, keyword):
-  services = fetch_all_data(client.list_services)
-  
-  matching_services = [s for s in services if keyword.lower() in s['ServiceName'].lower()]
+  next_marker = None
+  while True:
+    if next_marker:
+      response = client.list_services(NextToken=next_marker)
+    else:
+      response = client.list_services()
 
-  for service in matching_services:
-    print(f"Service Name: {service['ServiceName']} Service Code: {service['ServiceCode']}")
+    for service in response['Services']:
+      if keyword.lower() in (service['ServiceName'].lower():
+        print(f"Service Name: {service['ServiceName']} Service Code: {service['ServiceCode']}")
 
+  if 'NextToken' in response:
+    next_marker = response['NextToken']
+  else:
+    break
+    
 def fetch_all_data(func, **kwargs):
   results = []
 
@@ -40,6 +49,8 @@ def print_account_info():
   print(f"Account ID: {account_id}")
   print(f"ARN: {arn}")
   print(f"User ID: {user_id}")
+
+print_account_info()
 
 client = boto3.client('service-quotas')
 
